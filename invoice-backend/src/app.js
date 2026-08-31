@@ -2,7 +2,18 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 
-app.use(cors());
+const configuredFrontendUrls = (
+  process.env.FRONTEND_URLS || process.env.FRONTEND_URL || ''
+)
+  .split(',')
+  .map(url => url.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
+const allowedOrigins = configuredFrontendUrls.length
+  ? configuredFrontendUrls
+  : ['http://localhost:4200', 'http://127.0.0.1:4200'];
+
+app.use(cors({ origin: allowedOrigins }));
 
 app.use(express.json());
 app.use('/auth', require('./routes/auth.routes'));
