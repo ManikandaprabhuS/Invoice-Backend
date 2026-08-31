@@ -129,9 +129,9 @@ exports.createInvoice = async (req, res) => {
       console.log('[CREATE INVOICE] Services Missing:', req.body); // ✅ log input
       return res.status(400).json({ message: 'Services required' });
     }
-    if (!invoice.userName?.trim() || !invoice.phoneNumber?.trim() || !invoice.emailId?.trim()) {
+    if (!invoice.userName?.trim() || !invoice.phoneNumber?.trim()) {
       return res.status(400).json({
-        message: 'Client name, phone number and email ID are required'
+        message: 'Client name and phone number are required'
       });
     }
     if (invoice.invoiceType === 'Business' && !invoice.gstNumber?.trim()) {
@@ -146,7 +146,7 @@ exports.createInvoice = async (req, res) => {
     invoice.gstNumber = invoice.invoiceType === 'Customer'
       ? null
       : invoice.gstNumber.trim().toUpperCase();
-    invoice.emailId = invoice.emailId.trim();
+    invoice.emailId = invoice.emailId?.trim() || '';
     invoice.address = invoice.address?.trim() || '';
 
     const savedClient = await saveClientDetails(invoice);
@@ -220,7 +220,7 @@ exports.updateInvoice = async (req, res) => {
     );
 
     const invoiceType = invoice.invoiceType || 'Business';
-    if (invoice.userName && invoice.phoneNumber && invoice.emailId &&
+    if (invoice.userName && invoice.phoneNumber &&
       (invoiceType === 'Customer' || invoice.gstNumber)) {
       await saveClientDetails(invoice);
     }

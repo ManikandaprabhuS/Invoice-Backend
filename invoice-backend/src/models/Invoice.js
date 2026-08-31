@@ -27,7 +27,7 @@ const invoiceSchema = new mongoose.Schema(
         return this.invoiceType === 'Business';
       }
     },
-    emailId: { type: String, required: true, trim: true },
+    emailId: { type: String, default: '', trim: true },
     address: { type: String, trim: true },
 
     services: { type: [serviceSchema], required: true },

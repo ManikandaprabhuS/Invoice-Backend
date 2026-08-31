@@ -4,6 +4,7 @@ const LoginModel = require('../models/login');
 const { generateOtp, hashOtp } = require('../utils/otp');
 const { sendOtpEmail } = require('../utils/mailer');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 exports.register = async (req, res) => {
   try{
@@ -78,6 +79,7 @@ exports.createUser = async (req, res) => {
     });
 
     return res.status(201).json({
+      _id: user._id,
       id: user._id,
       userName: user.userName,
       emailId: user.emailId,
@@ -104,6 +106,10 @@ exports.getUsers = async (_req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid user account' });
+    }
+
     const user = await LoginModel.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'User account not found' });
 
