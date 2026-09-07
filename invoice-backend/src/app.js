@@ -3,10 +3,18 @@ const cors = require('cors');
 
 const app = express();
 
-const allowedOrigins = (process.env.FRONTEND_URLS || '')
+const normalizeOrigin = origin => String(origin || '').trim().replace(/\/+$/, '');
+
+const configuredOrigins = (process.env.FRONTEND_URLS || '')
   .split(',')
-  .map(origin => origin.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
+
+const developmentOrigins = process.env.NODE_ENV === 'production'
+  ? []
+  : ['http://localhost:4200', 'http://127.0.0.1:4200'];
+
+const allowedOrigins = new Set([...configuredOrigins, ...developmentOrigins]);
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -16,7 +24,7 @@ app.use(cors({
       return callback(null, true);
     }
 
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.has(normalizeOrigin(origin))) {
       return callback(null, true);
     }
 

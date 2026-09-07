@@ -37,6 +37,7 @@ const invoiceSchema = new mongoose.Schema(
     sgstAmount: { type: Number, required: true },
     roundOff: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
+    discount: { type: Number, default: 0, min: 0 },
     receivedAmount: { type: Number, required: true },
     modeOfPayment: {
       type: String,

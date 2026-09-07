@@ -91,11 +91,15 @@ const calculateInvoiceAmounts = invoice => {
   }
 
   const totalAmount = Number(invoice.totalAmount);
+  const discount = invoice.discount === null || invoice.discount === undefined || invoice.discount === ''
+    ? 0
+    : Number(invoice.discount);
   const receivedAmount = Number(invoice.receivedAmount);
   if (Number.isFinite(totalAmount)) invoice.totalAmount = totalAmount;
+  invoice.discount = Number.isFinite(discount) ? roundCurrency(discount) : 0;
   if (Number.isFinite(receivedAmount)) invoice.receivedAmount = receivedAmount;
   if (Number.isFinite(totalAmount) && Number.isFinite(receivedAmount)) {
-    invoice.balanceAmount = totalAmount - receivedAmount;
+    invoice.balanceAmount = roundCurrency(totalAmount - invoice.discount - receivedAmount);
   }
   return invoice;
 };
@@ -121,6 +125,10 @@ const addClientDetails = async invoices => {
 exports.createInvoice = async (req, res) => {
   try {
     console.log('[CREATE INVOICE] Payload:', req.body); // ✅ log input
+    if (req.body.discount !== null && req.body.discount !== undefined && req.body.discount !== '' &&
+      !Number.isFinite(Number(req.body.discount))) {
+      return res.status(400).json({ message: 'Discount must be a valid number' });
+    }
     const invoice = calculateInvoiceAmounts({ ...req.body });
     invoice.invoiceType = invoice.invoiceType === 'Customer' ? 'Customer' : 'Business';
 
@@ -139,6 +147,9 @@ exports.createInvoice = async (req, res) => {
     }
     if (!['Online', 'Cash'].includes(invoice.modeOfPayment)) {
       return res.status(400).json({ message: 'Payment mode must be Online or Cash' });
+    }
+    if (invoice.discount < 0 || invoice.discount > invoice.totalAmount) {
+      return res.status(400).json({ message: 'Discount must be between 0 and the final total' });
     }
 
     invoice.userName = invoice.userName.trim();
@@ -205,11 +216,19 @@ exports.updateInvoice = async (req, res) => {
     }
 
     const recalculatedInvoice = calculateInvoiceAmounts({ ...currentInvoice, ...req.body });
+    if (req.body.discount !== null && req.body.discount !== undefined && req.body.discount !== '' &&
+      !Number.isFinite(Number(req.body.discount))) {
+      return res.status(400).json({ message: 'Discount must be a valid number' });
+    }
+    if (recalculatedInvoice.discount < 0 || recalculatedInvoice.discount > recalculatedInvoice.totalAmount) {
+      return res.status(400).json({ message: 'Discount must be between 0 and the final total' });
+    }
     req.body.subTotal = recalculatedInvoice.subTotal;
     req.body.cgstAmount = recalculatedInvoice.cgstAmount;
     req.body.sgstAmount = recalculatedInvoice.sgstAmount;
     req.body.roundOff = recalculatedInvoice.roundOff;
     req.body.totalAmount = recalculatedInvoice.totalAmount;
+    req.body.discount = recalculatedInvoice.discount;
     req.body.receivedAmount = recalculatedInvoice.receivedAmount;
     req.body.balanceAmount = recalculatedInvoice.balanceAmount;
     
