@@ -63,7 +63,7 @@ exports.createUser = async (req, res) => {
 // READ ALL
 exports.getUsers = async (req, res) => {
   try{
-  const users = await User.find();
+  const users = await User.find().sort({ updatedAt: -1, createdAt: -1, _id: -1 });
   console.log('[GET USERS] Retrieved:', users); // ✅ log output
   res.json(users);
   } catch (err) {
