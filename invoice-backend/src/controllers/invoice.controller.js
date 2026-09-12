@@ -6,6 +6,12 @@ const normalizePhone = value => {
   return digits.length > 10 ? digits.slice(-10) : digits;
 };
 
+const nullableText = value => {
+  if (value === null || value === undefined) return null;
+  const normalized = String(value).trim();
+  return normalized || null;
+};
+
 const saveClientDetails = async invoice => {
   const phoneLookupKey = normalizePhone(invoice.phoneNumber);
   const gstNumber = String(invoice.gstNumber || '').trim().toUpperCase();
@@ -22,10 +28,10 @@ const saveClientDetails = async invoice => {
 
   const clientDetails = {
     userName: invoice.userName,
-    phoneNumber: invoice.phoneNumber,
-    phoneLookupKey,
-    emailId: invoice.emailId || '',
-    address: invoice.address || ''
+    phoneNumber: nullableText(invoice.phoneNumber),
+    phoneLookupKey: phoneLookupKey || null,
+    emailId: nullableText(invoice.emailId),
+    address: nullableText(invoice.address)
   };
 
   const clientUpdate = { $set: clientDetails };

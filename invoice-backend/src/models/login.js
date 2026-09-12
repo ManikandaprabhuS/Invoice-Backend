@@ -12,6 +12,9 @@ module.exports = mongoose.model(
 
     // 🔐 Forgot password fields
     resetOtpHash: String,
-    resetOtpExpires: Date
+    resetOtpExpires: Date,
+    resetOtpAttempts: { type: Number, default: 0 },
+    resetTokenHash: String,
+    resetTokenExpires: Date
   }, { timestamps: true })
 );

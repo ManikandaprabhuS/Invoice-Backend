@@ -5,6 +5,12 @@ const normalizePhone = value => {
   return digits.length > 10 ? digits.slice(-10) : digits;
 };
 
+const nullableText = value => {
+  if (value === null || value === undefined) return null;
+  const normalized = String(value).trim();
+  return normalized || null;
+};
+
 exports.findUserByBusinessDetails = async (req, res) => {
   try {
     const phoneNumber = req.query.phoneNumber?.trim();
@@ -34,10 +40,14 @@ exports.findUserByBusinessDetails = async (req, res) => {
 // CREATE
 exports.createUser = async (req, res) => {
   try {   
+  const phoneNumber = nullableText(req.body.phoneNumber);
   const payload = {
     ...req.body,
-    phoneLookupKey: normalizePhone(req.body.phoneNumber),
-    gstNumber: req.body.gstNumber?.trim().toUpperCase()
+    phoneNumber,
+    phoneLookupKey: phoneNumber ? normalizePhone(phoneNumber) : null,
+    emailId: nullableText(req.body.emailId),
+    address: nullableText(req.body.address),
+    gstNumber: nullableText(req.body.gstNumber)?.toUpperCase()
   };
   const user = await User.create(payload);
   console.log('[CREATE USER] Created:', user); // ✅ log output
@@ -95,14 +105,20 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   console.log('[UPDATE USER] Payload:', req.params.id, req.body); // ✅ log input
   try{
-  if (req.body.phoneNumber !== undefined) {
-    req.body.phoneLookupKey = normalizePhone(req.body.phoneNumber);
+  const payload = { ...req.body };
+  if (payload.phoneNumber !== undefined) {
+    payload.phoneNumber = nullableText(payload.phoneNumber);
+    payload.phoneLookupKey = payload.phoneNumber ? normalizePhone(payload.phoneNumber) : null;
   }
-  if (req.body.gstNumber) req.body.gstNumber = req.body.gstNumber.trim().toUpperCase();
+  if (payload.emailId !== undefined) payload.emailId = nullableText(payload.emailId);
+  if (payload.address !== undefined) payload.address = nullableText(payload.address);
+  if (payload.gstNumber !== undefined) {
+    payload.gstNumber = nullableText(payload.gstNumber)?.toUpperCase() || null;
+  }
   const user = await User.findByIdAndUpdate(
     req.params.id,
-    req.body,
-    { new: true }
+    payload,
+    { new: true, runValidators: true }
   );
   console.log('[UPDATE USER] Updated:', user); // ✅ log output
   res.json(user);

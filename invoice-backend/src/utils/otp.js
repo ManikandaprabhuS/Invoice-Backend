@@ -1,9 +1,13 @@
 const crypto = require('crypto');
 
 exports.generateOtp = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit
+  return crypto.randomInt(100000, 1000000).toString();
 };
 
-exports.hashOtp = (otp) => {
-  return crypto.createHash('sha256').update(otp).digest('hex');
+exports.hashOtp = (emailId, otp) => {
+  return crypto.createHash('sha256').update(`${emailId}:${otp}`).digest('hex');
 };
+
+exports.generateResetToken = () => crypto.randomBytes(32).toString('hex');
+
+exports.hashResetToken = token => crypto.createHash('sha256').update(token).digest('hex');

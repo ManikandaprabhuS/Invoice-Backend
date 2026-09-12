@@ -9,6 +9,7 @@ router.post('/users', auth, admin, c.createUser);
 router.get('/users', auth, admin, c.getUsers);
 router.delete('/users/:id', auth, admin, c.deleteUser);
 router.post('/forgot-password', c.forgotPassword);
+router.post('/verify-reset-otp', c.verifyResetOtp);
 router.post('/reset-password', c.resetPassword);
 
 module.exports = router;
