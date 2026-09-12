@@ -1,5 +1,13 @@
 const Service = require('../models/Service');
 
+const parseAmount = value => {
+  if (value === undefined || value === null || value === '') return 0;
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount >= 0
+    ? Math.round((amount + Number.EPSILON) * 100) / 100
+    : null;
+};
+
 const sendError = (res, error) => {
   if (error.code === 11000) {
     return res.status(409).json({ message: 'Service already exists' });
@@ -16,8 +24,10 @@ exports.createService = async (req, res) => {
   try {
     const name = req.body.name?.trim();
     if (!name) return res.status(400).json({ message: 'Service name is required' });
+    const amount = parseAmount(req.body.amount);
+    if (amount === null) return res.status(400).json({ message: 'Service amount must be a valid non-negative number' });
 
-    const service = await Service.create({ name });
+    const service = await Service.create({ name, amount });
     return res.status(201).json(service);
   } catch (error) {
     return sendError(res, error);
@@ -37,10 +47,16 @@ exports.updateService = async (req, res) => {
   try {
     const name = req.body.name?.trim();
     if (!name) return res.status(400).json({ message: 'Service name is required' });
+    const update = { name };
+    if (Object.prototype.hasOwnProperty.call(req.body, 'amount')) {
+      const amount = parseAmount(req.body.amount);
+      if (amount === null) return res.status(400).json({ message: 'Service amount must be a valid non-negative number' });
+      update.amount = amount;
+    }
 
     const service = await Service.findByIdAndUpdate(
       req.params.id,
-      { name },
+      update,
       { new: true, runValidators: true }
     );
 
